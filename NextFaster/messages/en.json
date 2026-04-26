@@ -1,0 +1,196 @@
+{
+    "common": {
+        "appName": "SouqFlow",
+        "language": "English"
+    },
+    "auth": {
+        "signup": {
+            "pageTitle": "Create Account",
+            "pageSubtitle": "Join SouqFlow and start selling today",
+            "emailLabel": "Email Address",
+            "emailRequired": "Please enter your email",
+            "invalidEmail": "Please enter a valid email address",
+            "passwordLabel": "Password",
+            "passwordRequired": "Please enter a password",
+            "passwordTooShort": "Password must be at least 6 characters",
+            "passwordHint": "At least 6 characters",
+            "confirmPasswordLabel": "Confirm Password",
+            "passwordMismatch": "Passwords do not match",
+            "nameLabel": "Full Name",
+            "namePlaceholder": "Enter your full name",
+            "nameRequired": "Please enter your name",
+            "locationLabel": "Location",
+            "selectLocation": "Select your location",
+            "typeLocation": "Enter your address or select from list",
+            "noLocations": "No locations found",
+            "cairo": "Cairo",
+            "giza": "Giza",
+            "alexandria": "Alexandria",
+            "other": "Other",
+            "locationRequired": "Please select your location",
+            "createAccount": "Create Account",
+            "creating": "Creating...",
+            "haveAccount": "Already have an account?",
+            "login": "Login"
+        },
+        "login": {
+            "pageTitle": "Welcome Back",
+            "pageSubtitle": "Login to your SouqFlow account",
+            "emailLabel": "Email Address",
+            "emailRequired": "Please enter your email",
+            "invalidEmail": "Please enter a valid email address",
+            "passwordLabel": "Password",
+            "passwordRequired": "Please enter your password",
+            "loginButton": "Login",
+            "loggingIn": "Logging in...",
+            "noAccount": "Don't have an account?",
+            "signup": "Sign up"
+        },
+        "roleSelection": {
+            "title": "What would you like to do?",
+            "subtitle": "Choose your role to get started",
+            "seller": {
+                "title": "I want to Sell",
+                "description": "Create your store and start selling products online with zero commission",
+                "cta": "Get Started"
+            },
+            "buyer": {
+                "title": "I want to Buy",
+                "description": "Browse and purchase products from sellers across Egypt",
+                "cta": "Start Shopping"
+            }
+        }
+    },
+    "seller": {
+        "onboarding": {
+            "pageTitle": "Set Up Your Store",
+            "pageSubtitle": "Tell us about your business",
+            "storeNameLabel": "Store Name",
+            "storeNamePlaceholder": "Enter your store name",
+            "storeNameRequired": "Store name is required",
+            "storeNameHint": "This is what customers will see",
+            "storeDescriptionLabel": "Store Description",
+            "storeDescriptionPlaceholder": "Describe what you sell",
+            "storeDescriptionRequired": "Store description is required",
+            "storeDescriptionHint": "Help customers understand your business",
+            "storeCategoryLabel": "Store Category",
+            "storeCategoryRequired": "Please select a category",
+            "selectCategory": "Select a category",
+            "whatsappLabel": "WhatsApp Number",
+            "whatsappPlaceholder": "+20 123 456 7890",
+            "whatsappRequired": "WhatsApp number is required",
+            "whatsappInvalid": "Please enter a valid phone number",
+            "whatsappHint": "Customers will contact you here",
+            "createStore": "Create Store",
+            "creating": "Creating...",
+            "success": "Store created successfully!",
+            "error": "Failed to create store"
+        }
+    },
+    "landing": {
+        "nav": {
+            "getStarted": "Get Started",
+            "logout": "Logout"
+        },
+        "hero": {
+            "badge": " Launch Your Store Today",
+            "title": "Sell Online for Free, Keep 100% of Your Profits",
+            "subtitle": "SouqFlow gives you a professional digital storefront with zero commission. Start selling in minutes, not days.",
+            "cta": {
+                "primary": "Create Your Store",
+                "secondary": "Learn More"
+            },
+            "trust": "Trusted by sellers across Egypt",
+            "sellers": "sellers already selling"
+        },
+        "features": {
+            "title": "Why Choose SouqFlow?",
+            "subtitle": "Everything you need to run your online business, included for free",
+            "zeroCommission": {
+                "title": "Zero Commission",
+                "description": "Keep 100% of your profits. We only charge 2 LE per fulfilled order to keep the platform running."
+            },
+            "easySetup": {
+                "title": "10-Minute Setup",
+                "description": "Create your store, add products, and start selling in under 10 minutes. No technical skills required."
+            },
+            "whatsapp": {
+                "title": "WhatsApp Integration",
+                "description": "Get instant notifications when customers order. Communicate directly with buyers via WhatsApp."
+            },
+            "unlimited": {
+                "title": "Unlimited Products",
+                "description": "Add as many products as you want. No limits on inventory, categories, or images."
+            },
+            "analytics": {
+                "title": "Built-in Analytics",
+                "description": "Track your sales, revenue, and customer behavior with real-time analytics dashboard."
+            },
+            "arabicFirst": {
+                "title": "Arabic-First Design",
+                "description": "Fully designed for Arabic speakers with RTL support and Egyptian payment methods."
+            }
+        },
+        "pricing": {
+            "title": "Simple, Transparent Pricing",
+            "subtitle": "No hidden fees. No monthly subscriptions. Just 2 LE per successful order.",
+            "free": {
+                "title": "Free Forever",
+                "description": "Everything you need to start selling",
+                "price": "Free",
+                "perOrder": "2 LE per fulfilled order",
+                "feature1": "Unlimited product listings",
+                "feature2": "Professional storefront",
+                "feature3": "WhatsApp order notifications",
+                "feature4": "Order tracking & management",
+                "feature5": "Sales analytics & reports",
+                "cta": "Start Selling Now"
+            }
+        },
+        "cta": {
+            "title": "Ready to Start Selling?",
+            "subtitle": "Join hundreds of sellers already using SouqFlow to grow their business.",
+            "button": "Create Your Free Store"
+        },
+        "aboutUs": {
+            "title": "About Us",
+            "subtitle": "Empowering Egyptian Sellers",
+            "description": "SouqFlow is built on the belief that running an online business should be free of prohibitive commission fees. We provide the tools you need to succeed.",
+            "values": {
+                "community": {
+                    "title": "Community First",
+                    "desc": "Built for Egyptian merchants, understanding local needs."
+                },
+                "innovation": {
+                    "title": "Continuous Innovation",
+                    "desc": "We constantly update our platform with cutting-edge tools."
+                },
+                "trust": {
+                    "title": "Secure & Reliable",
+                    "desc": "Your data and your customers' data is safe with us."
+                }
+            }
+        },
+        "contactUs": {
+            "title": "Contact Us",
+            "subtitle": "We're Here to Help",
+            "nameLabel": "Full Name",
+            "emailLabel": "Email Address",
+            "messageLabel": "Your Message",
+            "submitButton": "Send Message"
+        },
+        "footer": {
+            "tagline": "The zero-commission platform for Egyptian sellers",
+            "product": "Product",
+            "features": "Features",
+            "pricing": "Pricing",
+            "company": "Company",
+            "about": "About Us",
+            "contact": "Contact",
+            "legal": "Legal",
+            "privacy": "Privacy Policy",
+            "terms": "Terms of Service",
+            "rights": "All rights reserved."
+        }
+    }
+}
