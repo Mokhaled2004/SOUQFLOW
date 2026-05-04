@@ -1,27 +1,39 @@
 import { Ratelimit } from "@upstash/ratelimit"; // for deno: see above
 import { Redis } from "@upstash/redis"; // see below for cloudflare and fastly adapters
 
-if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-  throw new Error(
-    "Please link a Vercel KV instance or populate `KV_REST_API_URL` and `KV_REST_API_TOKEN`",
-  );
+const kvAvailable = !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+
+// Stub ratelimit that always allows requests when KV is not configured
+const allowAll = {
+  limit: async (_identifier: string) => ({ success: true, limit: 0, remaining: 0, reset: 0 }),
+} as unknown as Ratelimit;
+
+let authRateLimitInstance: Ratelimit;
+let signUpRateLimitInstance: Ratelimit;
+
+if (kvAvailable) {
+  const redis = new Redis({
+    url: process.env.KV_REST_API_URL!,
+    token: process.env.KV_REST_API_TOKEN!,
+  });
+
+  authRateLimitInstance = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "15 m"),
+    analytics: true,
+    prefix: "ratelimit:auth",
+  });
+
+  signUpRateLimitInstance = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(1, "15 m"),
+    analytics: true,
+    prefix: "ratelimit:signup",
+  });
+} else {
+  authRateLimitInstance = allowAll;
+  signUpRateLimitInstance = allowAll;
 }
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL,
-  token: process.env.KV_REST_API_TOKEN,
-});
-
-export const authRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "15 m"),
-  analytics: true,
-  prefix: "ratelimit:auth",
-});
-
-export const signUpRateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(1, "15 m"),
-  analytics: true,
-  prefix: "ratelimit:signup",
-});
+export const authRateLimit = authRateLimitInstance;
+export const signUpRateLimit = signUpRateLimitInstance;
