@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Package, LayoutGrid, LogOut, ChevronRight, Store as StoreIcon } from 'lucide-react';
 import { Store } from '@/types/store';
 import LanguageToggle from '@/components/LanguageToggle';
+import NotificationButton from '@/components/NotificationButton';
 
 interface AdminHeaderProps {
   store: Store;
@@ -39,6 +40,7 @@ export default function AdminHeader({ store, locale, isRTL, onLogout }: AdminHea
           {/* Actions */}
           <div className={`flex shrink-0 items-center gap-2 sm:gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <LanguageToggle />
+            <NotificationButton storeId={store.id} />
             <Link
               href={`/${locale}/seller/stores`}
               className="flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-bold text-neutral-600 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 sm:px-4 sm:py-2.5 sm:text-sm shadow-sm"
