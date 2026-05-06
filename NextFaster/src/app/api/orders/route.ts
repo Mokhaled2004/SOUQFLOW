@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { orders, orderItems } from '@/db/schema';
+import { orders, orderItems, pushSubscriptions, stores } from '@/db/schema';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
+import { eq, or, isNull } from 'drizzle-orm';
+import { sendPushToMany } from '@/lib/push';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key-min-32-chars-long');
 
@@ -62,6 +64,36 @@ export async function POST(request: NextRequest) {
         lineTotal: item.lineTotal.toString(),
       }))
     );
+
+    // Send push notifications to store owner + all souqflow admins
+    try {
+      const [store] = await db.select({ storeName: stores.storeName }).from(stores).where(eq(stores.id, storeId)).limit(1);
+      const subs = await db
+        .select()
+        .from(pushSubscriptions)
+        .where(or(eq(pushSubscriptions.storeId, storeId), isNull(pushSubscriptions.storeId)));
+
+      if (subs.length > 0) {
+        const expiredEndpoints = await sendPushToMany(subs, {
+          title: `🛍️ طلب جديد — ${store?.storeName ?? 'متجرك'}`,
+          body: `${customerName} • ${total} EGP`,
+          url: `/ar/seller/stores`,
+          tag: `order-${order.id}`,
+        });
+
+        // Clean up expired subscriptions
+        if (expiredEndpoints.length > 0) {
+          await Promise.all(
+            expiredEndpoints.map((ep) =>
+              db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, ep)),
+            ),
+          );
+        }
+      }
+    } catch (pushErr) {
+      console.error('[Push] Failed to send order notification:', pushErr);
+      // Don't fail the order creation if push fails
+    }
 
     return NextResponse.json({ order }, { status: 201 });
   } catch (error) {

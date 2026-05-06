@@ -652,3 +652,25 @@ export const productAnalyticsRelations = relations(productAnalytics, ({ one }) =
     references: [products.slug],
   }),
 }));
+
+// ─────────────────────────────────────────────
+// PUSH SUBSCRIPTIONS (Web Push Notifications)
+// ─────────────────────────────────────────────
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: serial("id").primaryKey(),
+    // storeId = null means souqflow admin subscription
+    storeId: integer("store_id").references(() => stores.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull().unique(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => ({
+    storeIdIdx: index("push_subscriptions_store_id_idx").on(table.storeId),
+  }),
+);
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type NewPushSubscription = typeof pushSubscriptions.$inferInsert;
