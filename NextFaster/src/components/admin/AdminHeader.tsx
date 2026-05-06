@@ -40,7 +40,7 @@ export default function AdminHeader({ store, locale, isRTL, onLogout }: AdminHea
           {/* Actions */}
           <div className={`flex shrink-0 items-center gap-2 sm:gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
             <LanguageToggle />
-            <NotificationButton storeId={store.id} />
+            <NotificationButton storeId={store.id} locale={locale} />
             <Link
               href={`/${locale}/seller/stores`}
               className="flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3 py-1.5 text-xs font-bold text-neutral-600 transition-all hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 sm:px-4 sm:py-2.5 sm:text-sm shadow-sm"

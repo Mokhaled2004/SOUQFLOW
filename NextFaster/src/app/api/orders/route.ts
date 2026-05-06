@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     // Send push notifications to store owner + all souqflow admins
     try {
-      const [store] = await db.select({ storeName: stores.storeName }).from(stores).where(eq(stores.id, storeId)).limit(1);
+      const [store] = await db.select({ storeName: stores.storeName, slug: stores.slug }).from(stores).where(eq(stores.id, storeId)).limit(1);
       const subs = await db
         .select()
         .from(pushSubscriptions)
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
         const expiredEndpoints = await sendPushToMany(subs, {
           title: `🛍️ طلب جديد — ${store?.storeName ?? 'متجرك'}`,
           body: `${customerName} • ${total} EGP`,
-          url: `/ar/seller/stores`,
+          url: `/ar/${store?.slug ?? ''}/admin?tab=orders`,
           tag: `order-${order.id}`,
         });
 

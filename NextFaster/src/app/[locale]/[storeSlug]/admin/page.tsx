@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { useLocale } from 'next-intl';
 import Link from 'next/link';
 import { Edit3, Store, Package, ShoppingBag, ClipboardList, BarChart2, Loader2, AlertCircle } from 'lucide-react';
@@ -29,6 +29,7 @@ const TABS: { id: Tab; labelEn: string; labelAr: string; icon: React.ReactNode }
 export default function StoreAdminPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const storeSlug = params.storeSlug as string;
   const isRTL = locale === 'ar';
@@ -42,6 +43,14 @@ export default function StoreAdminPage() {
   const [shippingRates, setShippingRates] = useState<Record<string, string>>({});
   const [catalog, setCatalog] = useState<CatalogCategory[]>([]);
   const [activeTab, setActiveTab] = useState<Tab>('store');
+
+  // Read tab from URL on mount (e.g. from push notification click)
+  useEffect(() => {
+    const tab = searchParams.get('tab') as Tab | null;
+    if (tab && TABS.some((t) => t.id === tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const load = async () => {

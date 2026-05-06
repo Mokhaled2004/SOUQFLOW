@@ -154,7 +154,7 @@ export default function SouqFlowDashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            <NotificationButton />
+            <NotificationButton locale={locale} />
             <div className="hidden sm:flex flex-col items-end">
                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">System Admin</span>
                <span className="text-sm font-black tracking-tight text-neutral-900">{adminName}</span>
