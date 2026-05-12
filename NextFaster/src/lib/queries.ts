@@ -135,21 +135,13 @@ export const getProductCount = unstable_cache(
 );
 
 // could be optimized by storing category slug on the products table
+// can now use the direct category_slug on products table for better performance
 export const getCategoryProductCount = unstable_cache(
   (categorySlug: string) =>
     db
       .select({ count: count() })
-      .from(categories)
-      .leftJoin(
-        subcollections,
-        eq(categories.slug, subcollections.category_slug),
-      )
-      .leftJoin(
-        subcategories,
-        eq(subcollections.id, subcategories.subcollection_id),
-      )
-      .leftJoin(products, eq(subcategories.slug, products.subcategory_slug))
-      .where(eq(categories.slug, categorySlug)),
+      .from(products)
+      .where(and(eq(products.category_slug, categorySlug), eq(products.isActive, 1))),
   ["category-product-count"],
   {
     revalidate: 60 * 60 * 2, // two hours,
@@ -161,7 +153,7 @@ export const getSubcategoryProductCount = unstable_cache(
     db
       .select({ count: count() })
       .from(products)
-      .where(eq(products.subcategory_slug, subcategorySlug)),
+      .where(and(eq(products.subcategory_slug, subcategorySlug), eq(products.isActive, 1))),
   ["subcategory-product-count"],
   {
     revalidate: 60 * 60 * 2, // two hours,
@@ -172,32 +164,24 @@ export const getSearchResults = unstable_cache(
   async (searchTerm: string) => {
     let results;
 
-    // do we really need to do this hybrid search pattern?
-
     if (searchTerm.length <= 2) {
-      // If the search term is short (e.g., "W"), use ILIKE for prefix matching
       results = await db
         .select()
         .from(products)
-        .where(sql`${products.name} ILIKE ${searchTerm + "%"}`) // Prefix match
+        .where(sql`${products.name} ILIKE ${searchTerm + "%"}`)
         .limit(5)
-        .innerJoin(
+        .leftJoin(
           subcategories,
-          sql`${products.subcategory_slug} = ${subcategories.slug}`,
+          eq(products.subcategory_slug, subcategories.slug),
         )
-        .innerJoin(
-          subcollections,
-          sql`${subcategories.subcollection_id} = ${subcollections.id}`,
-        )
-        .innerJoin(
+        .leftJoin(
           categories,
-          sql`${subcollections.category_slug} = ${categories.slug}`,
+          sql`COALESCE(${products.category_slug}, ${subcategories.slug}) = ${categories.slug}`,
         );
     } else {
-      // For longer search terms, use full-text search with tsquery
       const formattedSearchTerm = searchTerm
         .split(" ")
-        .filter((term) => term.trim() !== "") // Filter out empty terms
+        .filter((term) => term.trim() !== "")
         .map((term) => `${term}:*`)
         .join(" & ");
 
@@ -208,17 +192,13 @@ export const getSearchResults = unstable_cache(
           sql`to_tsvector('english', ${products.name}) @@ to_tsquery('english', ${formattedSearchTerm})`,
         )
         .limit(5)
-        .innerJoin(
+        .leftJoin(
           subcategories,
-          sql`${products.subcategory_slug} = ${subcategories.slug}`,
+          eq(products.subcategory_slug, subcategories.slug),
         )
-        .innerJoin(
-          subcollections,
-          sql`${subcategories.subcollection_id} = ${subcollections.id}`,
-        )
-        .innerJoin(
+        .leftJoin(
           categories,
-          sql`${subcollections.category_slug} = ${categories.slug}`,
+          sql`COALESCE(${products.category_slug}, ${subcategories.slug}) = ${categories.slug}`,
         );
     }
 

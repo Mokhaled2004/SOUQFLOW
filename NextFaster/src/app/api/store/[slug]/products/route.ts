@@ -16,6 +16,7 @@ export async function GET(
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
     const subcategorySlug = searchParams.get('subcategory');
+    const categorySlug = searchParams.get('category');
 
     // Single indexed lookup — O(1)
     const [store] = await db
@@ -26,13 +27,15 @@ export async function GET(
 
     if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 404 });
 
-    const prods = subcategorySlug
-      ? await db.select().from(products).where(
-          and(eq(products.storeId, store.id), eq(products.isActive, 1), eq(products.subcategory_slug, subcategorySlug)),
-        )
-      : await db.select().from(products).where(
-          and(eq(products.storeId, store.id), eq(products.isActive, 1)),
-        );
+    let whereClause = and(eq(products.storeId, store.id), eq(products.isActive, 1));
+    
+    if (subcategorySlug) {
+      whereClause = and(whereClause, eq(products.subcategory_slug, subcategorySlug));
+    } else if (categorySlug) {
+      whereClause = and(whereClause, eq(products.category_slug, categorySlug));
+    }
+
+    const prods = await db.select().from(products).where(whereClause);
 
     return NextResponse.json({ products: prods });
   } catch (error) {

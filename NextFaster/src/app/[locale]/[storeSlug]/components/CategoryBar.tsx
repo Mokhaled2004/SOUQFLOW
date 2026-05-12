@@ -27,17 +27,20 @@ export function CategoryBar({ catalog, selectedSubcategory, locale, showDiscount
   const isAllSelected = !selectedSubcategory && !showDiscountsOnly && !showPackagesOnly;
 
   const handleCatClick = (cat: CatalogCategory) => {
-    if (cat.subcategories.length === 0) return;
-    setOpenCat(openCat === cat.id ? null : cat.id);
+    onSubcategoryClick(`cat:${cat.slug}`);
+    if (cat.subcategories.length > 0) {
+      setOpenCat(openCat === cat.id ? null : cat.id);
+    }
   };
 
   const handleSubClick = (slug: string) => {
-    onSubcategoryClick(slug);
+    onSubcategoryClick(`sub:${slug}`);
     setOpenCat(null);
   };
 
   const isCatActive = (cat: CatalogCategory) =>
-    cat.subcategories.some((s) => s.slug === selectedSubcategory);
+    selectedSubcategory === `cat:${cat.slug}` ||
+    cat.subcategories.some((s) => `sub:${s.slug}` === selectedSubcategory);
 
   return (
     <div className="mb-10">
@@ -122,13 +125,13 @@ export function CategoryBar({ catalog, selectedSubcategory, locale, showDiscount
                           onClick={() => handleSubClick(sub.slug)}
                           className={cn(
                             'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-[11px] font-black uppercase tracking-widest transition-all hover:bg-emerald-50/50 hover:text-emerald-700',
-                            selectedSubcategory === sub.slug
+                            selectedSubcategory === `sub:${sub.slug}`
                               ? 'bg-emerald-50 text-emerald-700'
                               : 'text-neutral-500',
                             isAr && 'flex-row-reverse text-right',
                           )}
                         >
-                          <div className={cn("h-1.5 w-1.5 rounded-full", selectedSubcategory === sub.slug ? "bg-emerald-500 animate-pulse" : "bg-neutral-200")} />
+                          <div className={cn("h-1.5 w-1.5 rounded-full", selectedSubcategory === `sub:${sub.slug}` ? "bg-emerald-500 animate-pulse" : "bg-neutral-200")} />
                           {sub.name}
                         </button>
                       ))}

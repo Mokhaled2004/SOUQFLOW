@@ -203,7 +203,12 @@ export default function StorePage() {
 
   const displayedProducts = searchTerm ? searchResults : products;
   const relatedProducts = selectedProduct
-    ? products.filter((p) => p.subcategory_slug === selectedProduct.subcategory_slug && p.slug !== selectedProduct.slug)
+    ? products.filter((p) => {
+        if (p.slug === selectedProduct.slug) return false;
+        if (selectedProduct.subcategory_slug && p.subcategory_slug === selectedProduct.subcategory_slug) return true;
+        if (selectedProduct.category_slug && p.category_slug === selectedProduct.category_slug) return true;
+        return false;
+      })
     : [];
 
   // Filter products by discount if showDiscountsOnly is true

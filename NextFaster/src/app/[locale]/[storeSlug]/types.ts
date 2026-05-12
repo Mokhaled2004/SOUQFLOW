@@ -34,7 +34,8 @@ export interface StoreProduct {
   description: string;
   price: string;
   image_url: string | null;
-  subcategory_slug: string;
+  subcategory_slug: string | null;
+  category_slug?: string | null;
   isActive: number;
   offerPercentage: number;
   isOutOfStock: number;
@@ -58,7 +59,8 @@ export function packageToCartProduct(pkg: StorePackage): StoreProduct {
     description: pkg.description || '',
     price: pkg.offerPrice,
     image_url: pkg.imageUrl,
-    subcategory_slug: '',
+    subcategory_slug: null,
+    category_slug: null,
     isActive: pkg.isActive,
     offerPercentage: 0, // already discounted — offer price IS the price
     isOutOfStock: 0,

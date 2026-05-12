@@ -56,15 +56,41 @@ export default function ProductsSection({
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = !selectedSubcategory || p.subcategory_slug === selectedSubcategory;
+    
+    let matchesCategory = !selectedSubcategory;
+    if (selectedSubcategory) {
+      if (selectedSubcategory === 'none') {
+        matchesCategory = !p.subcategory_slug && !p.category_slug && !p.collection_id;
+      } else if (selectedSubcategory.startsWith('cat:')) {
+        const slug = selectedSubcategory.replace('cat:', '');
+        const collection = catalog.find(c => c.slug === slug);
+        if (collection) {
+          const subcatSlugs = collection.subcategories.map(s => s.slug);
+          matchesCategory = (p.collection_id === collection.id) || 
+                           (p.subcategory_slug ? subcatSlugs.includes(p.subcategory_slug) : false);
+        } else {
+          matchesCategory = false;
+        }
+      } else if (selectedSubcategory.startsWith('sub:')) {
+        matchesCategory = p.subcategory_slug === selectedSubcategory.replace('sub:', '');
+      }
+    }
+
     const matchesActive = showInactive || p.isActive === 1;
     return matchesSearch && matchesCategory && matchesActive;
   });
 
-  // Get all subcategories for filter
-  const allSubcategories = catalog.flatMap((cat) =>
-    cat.subcategories.map((sub) => ({ ...sub, categoryName: cat.name }))
-  );
+  // Category filter options
+  const categoryFilterOptions = [
+    { value: 'none', label: isAr ? 'بدون فئة' : 'No Category' },
+    ...catalog.flatMap((cat) => [
+      { value: `cat:${cat.slug}`, label: cat.name },
+      ...cat.subcategories.map((sub) => ({
+        value: `sub:${sub.slug}`,
+        label: `   └─ ${sub.name}`
+      }))
+    ])
+  ];
 
   const handleAddProduct = async (values: any) => {
     try {
@@ -117,7 +143,7 @@ export default function ProductsSection({
       <ProductForm
         storeSlug={storeSlug}
         storeId={storeId}
-        subcategories={allSubcategories}
+        categories={catalog}
         product={editingProduct}
         onSave={editingProduct ? handleUpdateProduct : handleAddProduct}
         onCancel={() => {
@@ -192,10 +218,7 @@ export default function ProductsSection({
           <CustomSelect
             value={selectedSubcategory}
             onChange={(val) => setSelectedSubcategory(val)}
-            options={allSubcategories.map((sub) => ({
-              value: sub.slug,
-              label: `${sub.categoryName} - ${sub.name}`
-            }))}
+            options={categoryFilterOptions}
             placeholder={isAr ? 'جميع الفئات' : 'All Categories'}
             isRTL={isRTL}
           />

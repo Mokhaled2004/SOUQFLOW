@@ -120,9 +120,11 @@ export function ProductList({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-black text-neutral-900 uppercase tracking-tight group-hover:text-emerald-600 transition-colors">{p.name}</p>
                         <div className={`mt-0.5 flex items-center gap-2 ${isAr ? 'flex-row-reverse' : ''}`}>
-                          <span className="text-[10px] font-black text-emerald-600">{parseFloat(p.price).toFixed(2)}</span>
+                          <span className="truncate text-[9px] font-black text-emerald-600">{parseFloat(p.price).toFixed(2)}</span>
                           <div className="h-1 w-1 rounded-full bg-neutral-200" />
-                          <span className="truncate text-[9px] font-bold text-neutral-400 capitalize">{p.subcategory_slug.replace(/-/g, ' ')}</span>
+                          <span className="truncate text-[9px] font-bold text-neutral-400 capitalize">
+                            {(p.subcategory_slug || p.category_slug || (isAr ? 'بدون فئة' : 'Uncategorized')).replace(/-/g, ' ')}
+                          </span>
                         </div>
                       </div>
                     </button>

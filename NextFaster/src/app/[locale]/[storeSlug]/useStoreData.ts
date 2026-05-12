@@ -32,11 +32,18 @@ export function useStoreData(storeSlug: string) {
       .catch(() => setPackages([]));
   }, [store, storeSlug]);
 
-  const loadProducts = useCallback((subcatSlug: string) => {
+  const loadProducts = useCallback((slug: string) => {
     setProductsLoading(true);
-    const url = subcatSlug
-      ? `/api/store/${storeSlug}/products?subcategory=${subcatSlug}`
-      : `/api/store/${storeSlug}/products`;
+    let url = `/api/store/${storeSlug}/products`;
+    if (slug) {
+      if (slug.startsWith('cat:')) {
+        url += `?category=${slug.replace('cat:', '')}`;
+      } else if (slug.startsWith('sub:')) {
+        url += `?subcategory=${slug.replace('sub:', '')}`;
+      } else {
+        url += `?subcategory=${slug}`; // fallback for old behavior
+      }
+    }
     fetch(url)
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);

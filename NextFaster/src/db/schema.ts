@@ -196,8 +196,11 @@ export const products = pgTable(
     description: text("description").notNull(),
     price: numeric("price").notNull(),
     subcategory_slug: text("subcategory_slug")
-      .notNull()
       .references(() => subcategories.slug, { onDelete: "cascade" }),
+    category_slug: text("category_slug")
+      .references(() => categories.slug, { onDelete: "cascade" }),
+    collection_id: integer("collection_id")
+      .references(() => collections.id, { onDelete: "cascade" }),
     storeId: integer("store_id")
       .notNull()
       .references(() => stores.id, { onDelete: "cascade" }),
@@ -213,10 +216,14 @@ export const products = pgTable(
       sql`to_tsvector('english', ${table.name})`,
     ),
     subcategorySlugIdx: index("products_subcategory_slug_idx").on(table.subcategory_slug),
+    categorySlugIdx: index("products_category_slug_idx").on(table.category_slug),
+    collectionIdIdx: index("products_collection_id_idx").on(table.collection_id),
     // Fast lookup of all products for a store
     storeIdIdx: index("products_store_id_idx").on(table.storeId),
     // Composite: store + subcategory — the most common query (product listing page)
     storeSubcategoryIdx: index("products_store_subcategory_idx").on(table.storeId, table.subcategory_slug),
+    storeCategoryIdx: index("products_store_category_idx").on(table.storeId, table.category_slug),
+    storeCollectionIdx: index("products_store_collection_idx").on(table.storeId, table.collection_id),
     // Composite: store + active — for filtering active products
     storeActiveIdx: index("products_store_active_idx").on(table.storeId, table.isActive),
   }),
@@ -301,6 +308,14 @@ export const productsRelations = relations(products, ({ one }) => ({
   subcategory: one(subcategories, {
     fields: [products.subcategory_slug],
     references: [subcategories.slug],
+  }),
+  category: one(categories, {
+    fields: [products.category_slug],
+    references: [categories.slug],
+  }),
+  collection: one(collections, {
+    fields: [products.collection_id],
+    references: [collections.id],
   }),
   store: one(stores, {
     fields: [products.storeId],

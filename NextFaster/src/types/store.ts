@@ -47,7 +47,9 @@ export interface Product {
   name: string;
   description: string;
   price: string;
-  subcategory_slug: string;
+  subcategory_slug: string | null;
+  category_slug?: string | null;
+  collection_id?: number | null;
   storeId: number;
   imageUrl: string | null;
   isActive: number;
@@ -59,6 +61,8 @@ export interface ProductFormValues {
   name: string;
   description: string;
   price: string;
-  subcategorySlug: string;
+  subcategorySlug?: string | null;
+  categorySlug?: string | null;
+  collectionId?: number | null;
   imageUrl: string;
 }

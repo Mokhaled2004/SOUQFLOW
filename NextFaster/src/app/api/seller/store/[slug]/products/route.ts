@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { products, stores, subcategories } from '@/db/schema';
+import { products, stores, subcategories, categories, collections } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyToken } from '@/lib/auth';
 import { generateSlug } from '@/lib/slug';
@@ -51,22 +51,40 @@ export async function POST(
   if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 404 });
 
   const body = await request.json();
-  const { name, description, price, subcategorySlug, imageUrl } = body;
+  const { name, description, price, subcategorySlug, categorySlug, collectionId, imageUrl } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: 'Description is required' }, { status: 400 });
   if (!price) return NextResponse.json({ error: 'Price is required' }, { status: 400 });
-  if (!subcategorySlug) return NextResponse.json({ error: 'Category is required' }, { status: 400 });
 
-  // Verify subcategory belongs to this store
-  const subcategory = await db
-    .select()
-    .from(subcategories)
-    .where(and(eq(subcategories.slug, subcategorySlug), eq(subcategories.storeId, store.id)))
-    .limit(1);
+  let finalCollectionId = collectionId ? Number(collectionId) : null;
+  let finalCategorySlug = categorySlug || null;
+  let finalSubcategorySlug = subcategorySlug || null;
 
-  if (subcategory.length === 0) {
-    return NextResponse.json({ error: 'Subcategory not found' }, { status: 404 });
+  // Verify association if provided
+  if (subcategorySlug) {
+    const subcategory = await db
+      .select()
+      .from(subcategories)
+      .where(and(eq(subcategories.slug, subcategorySlug), eq(subcategories.storeId, store.id)))
+      .limit(1);
+    if (subcategory.length === 0) return NextResponse.json({ error: 'Subcategory not found' }, { status: 404 });
+  } else if (categorySlug) {
+    const col = await db
+      .select()
+      .from(collections)
+      .where(and(eq(collections.slug, categorySlug), eq(collections.storeId, store.id)))
+      .limit(1);
+    if (col.length === 0) return NextResponse.json({ error: 'Category (Collection) not found' }, { status: 404 });
+    
+    finalCollectionId = col[0].id;
+    // Find the auto-created category under this collection
+    const cat = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.collection_id, col[0].id))
+      .limit(1);
+    finalCategorySlug = cat.length > 0 ? cat[0].slug : null;
   }
 
   // Generate unique slug
@@ -80,7 +98,9 @@ export async function POST(
       name: name.trim(),
       description: description.trim(),
       price: String(price),
-      subcategory_slug: subcategorySlug,
+      subcategory_slug: finalSubcategorySlug,
+      category_slug: finalCategorySlug,
+      collection_id: finalCollectionId,
       storeId: store.id,
       image_url: imageUrl || null,
       isActive: 1,

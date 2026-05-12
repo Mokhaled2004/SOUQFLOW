@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { ArrowLeft, Upload, AlertCircle, ChevronDown } from 'lucide-react';
-import { Product, CatalogSubcategory } from '@/types/store';
+import { Product, CatalogCategory } from '@/types/store';
 
 interface ProductFormProps {
   storeSlug: string;
   storeId: number;
-  subcategories: (CatalogSubcategory & { categoryName: string })[];
+  categories: CatalogCategory[];
   product?: Product | null;
   onSave: (values: any) => Promise<void>;
   onCancel: () => void;
@@ -18,7 +18,7 @@ interface ProductFormProps {
 export default function ProductForm({
   storeSlug,
   storeId,
-  subcategories,
+  categories,
   product,
   onSave,
   onCancel,
@@ -29,7 +29,8 @@ export default function ProductForm({
     name: product?.name || '',
     description: product?.description || '',
     price: product?.price || '',
-    subcategorySlug: (product as any)?.subcategorySlug || (product as any)?.subcategory_slug || '',
+    subcategorySlug: (product as any)?.subcategory_slug || (product as any)?.subcategorySlug || '',
+    categorySlug: (product as any)?.category_slug || (product as any)?.categorySlug || '',
     imageUrl: (product as any)?.imageUrl || (product as any)?.image_url || '',
   });
 
@@ -83,10 +84,6 @@ export default function ProductForm({
       setError(isAr ? 'السعر مطلوب' : 'Price is required');
       return;
     }
-    if (!formData.subcategorySlug) {
-      setError(isAr ? 'الفئة مطلوبة' : 'Category is required');
-      return;
-    }
 
     setSaving(true);
     try {
@@ -95,6 +92,35 @@ export default function ProductForm({
       setError(isAr ? 'فشل حفظ المنتج' : 'Failed to save product');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Flatten categories and subcategories for the dropdown
+  const categoryOptions = [
+    { value: 'none', label: isAr ? 'بدون فئة' : 'No Category' },
+    ...categories.flatMap((cat) => [
+      { value: `cat:${cat.slug}`, label: cat.name },
+      ...cat.subcategories.map((sub) => ({
+        value: `sub:${sub.slug}`,
+        label: `   └─ ${sub.name}`
+      }))
+    ])
+  ];
+
+  const currentSelection = formData.subcategorySlug 
+    ? `sub:${formData.subcategorySlug}` 
+    : formData.categorySlug 
+      ? `cat:${formData.categorySlug}` 
+      : 'none';
+
+  const handleCategoryChange = (val: string) => {
+    if (val === 'none') {
+      setFormData(prev => ({ ...prev, categorySlug: '', subcategorySlug: '' }));
+    } else if (val.startsWith('cat:')) {
+      setFormData(prev => ({ ...prev, categorySlug: val.replace('cat:', ''), subcategorySlug: '' }));
+    } else if (val.startsWith('sub:')) {
+      const slug = val.replace('sub:', '');
+      setFormData(prev => ({ ...prev, subcategorySlug: slug, categorySlug: '' }));
     }
   };
 
@@ -215,13 +241,10 @@ export default function ProductForm({
             {isAr ? 'الفئة' : 'Category'}
           </label>
           <CustomSelect
-            value={formData.subcategorySlug}
-            onChange={(val) => setFormData((prev) => ({ ...prev, subcategorySlug: val }))}
+            value={currentSelection}
+            onChange={handleCategoryChange}
             placeholder={isAr ? 'اختر فئة' : 'Select a category'}
-            options={subcategories.map((sub) => ({
-              value: sub.slug,
-              label: `${sub.categoryName} - ${sub.name}`
-            }))}
+            options={categoryOptions}
             isRTL={isRTL}
           />
         </div>
@@ -280,13 +303,6 @@ function CustomSelect({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
           <div className="absolute top-full left-0 z-50 mt-2 w-full rounded-xl border border-neutral-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] max-h-60 overflow-y-auto py-1.5 animate-in fade-in slide-in-from-top-2">
-            <button
-              type="button"
-              onClick={(e) => { e.preventDefault(); onChange(''); setIsOpen(false); }}
-              className={`w-full block px-4 py-2.5 text-sm font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700 ${value === '' ? 'bg-emerald-50 text-emerald-700' : 'text-neutral-700'} ${isRTL ? 'text-right' : 'text-left'}`}
-            >
-              {placeholder}
-            </button>
             {options.map((opt) => (
               <button
                 key={opt.value}
