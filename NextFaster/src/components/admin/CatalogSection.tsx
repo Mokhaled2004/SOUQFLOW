@@ -121,7 +121,7 @@ export default function CatalogSection({
               ? 'نظّم منتجاتك في فئات وفئات فرعية'
               : 'Organize your products into categories and subcategories'}
           </p>
-          <p className="mt-2 text-xs font-bold text-emerald-600/80 bg-emerald-50 inline-block px-3 py-1.5 rounded-lg">
+          <p className="mt-2 text-[10px] sm:text-xs font-bold text-emerald-600/80 bg-emerald-50 px-3 py-1.5 rounded-lg leading-relaxed">
             {isAr
               ? ' الهيكل: مجموعة ← فئة ← مجموعة فرعية ← فئة فرعية ← منتجات'
               : ' Structure: Collection → Category → Subcollection → Subcategory → Products'}
@@ -129,7 +129,7 @@ export default function CatalogSection({
         </div>
         <button
           onClick={() => setShowCategoryInput((v) => !v)}
-          className={`shrink-0 flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-600 active:scale-[0.98] shadow-md shadow-neutral-200 ${isRTL ? 'flex-row-reverse' : ''}`}
+          className={`shrink-0 flex items-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2.5 text-xs sm:text-sm font-bold text-white transition-all hover:bg-emerald-600 active:scale-[0.98] shadow-md shadow-neutral-200 ${isRTL ? 'flex-row-reverse' : ''}`}
         >
           <Plus className="h-4 w-4" />
           {isAr ? 'فئة جديدة' : 'New Category'}
@@ -138,7 +138,7 @@ export default function CatalogSection({
 
       {/* Examples hint */}
       <div 
-        className={`mb-6 rounded-xl border border-neutral-100 bg-neutral-50/80 px-4 py-3.5 text-xs font-medium text-neutral-500 shadow-sm ${isRTL ? 'text-right' : ''}`}
+        className={`mb-6 rounded-xl border border-neutral-100 bg-neutral-50/80 px-4 py-3.5 text-[10px] sm:text-xs font-medium text-neutral-500 shadow-sm leading-relaxed ${isRTL ? 'text-right' : ''}`}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
         <span className="font-black text-neutral-700">{isAr ? 'مثال: ' : 'Example: '}</span>

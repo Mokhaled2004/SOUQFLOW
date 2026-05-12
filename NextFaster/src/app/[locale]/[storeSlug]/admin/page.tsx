@@ -101,7 +101,12 @@ export default function StoreAdminPage() {
   };
 
   const profilePct = store
-    ? Math.round(([store.email, store.phone, store.primaryLocation, store.storeDescription, store.businessType].filter(Boolean).length / 5) * 100)
+    ? Math.min(100, Math.round(([
+        store.email, 
+        store.whatsappNumber || store.phone, 
+        store.primaryLocation,
+        store.businessType || store.taxId || store.storeDescription
+      ].filter(Boolean).length / 4) * 100))
     : 0;
 
   const formInitialValues: StoreInfoFormValues = {
