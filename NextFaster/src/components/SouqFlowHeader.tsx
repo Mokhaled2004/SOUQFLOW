@@ -93,6 +93,9 @@ export default function SouqFlowHeader() {
             <Link href={`/${locale}#about`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
               {tFooter('about')}
             </Link>
+            <Link href={`/${locale}/buyer/dashboard`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
+              {tFooter('explore')}
+            </Link>
             <Link href={`/${locale}#pricing`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
               {tFooter('pricing')}
             </Link>
@@ -208,6 +211,13 @@ export default function SouqFlowHeader() {
               className="block rounded-lg px-3 py-2.5 text-sm font-bold text-neutral-700 hover:bg-emerald-50 hover:text-emerald-600 transition"
             >
               {tFooter('about')}
+            </Link>
+            <Link
+              href={`/${locale}/buyer/dashboard`}
+              onClick={closeAll}
+              className="block rounded-lg px-3 py-2.5 text-sm font-bold text-neutral-700 hover:bg-emerald-50 hover:text-emerald-600 transition"
+            >
+              {tFooter('explore')}
             </Link>
             <Link
               href={`/${locale}#pricing`}

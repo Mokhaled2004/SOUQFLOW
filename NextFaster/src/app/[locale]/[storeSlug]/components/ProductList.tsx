@@ -18,6 +18,7 @@ interface Props {
   showDiscountsOnly: boolean;
   showPackagesOnly: boolean;
   onProductClick: (p: StoreProduct) => void;
+  onPackageClick: (pkg: StorePackage) => void;
   onAddToCart: (p: StoreProduct) => void;
   onSubcategoryClick: (slug: string) => void;
   onAllClick: () => void;
@@ -27,7 +28,7 @@ interface Props {
 
 export function ProductList({
   store, catalog, products, packages, loading, locale,
-  selectedSubcategory, showDiscountsOnly, showPackagesOnly, onProductClick, onAddToCart,
+  selectedSubcategory, showDiscountsOnly, showPackagesOnly, onProductClick, onPackageClick, onAddToCart,
   onSubcategoryClick, onAllClick, onDiscountsClick, onPackagesClick,
 }: Props) {
   const isAr = locale === 'ar';
@@ -186,7 +187,7 @@ export function ProductList({
                   key={pkg.id}
                   package={pkg}
                   locale={locale}
-                  onClick={() => {}}
+                  onClick={() => onPackageClick(pkg)}
                   onAddToCart={(e) => { e.stopPropagation(); onAddToCart(packageToCartProduct(pkg)); }}
                 />
               ))}

@@ -49,6 +49,10 @@ export interface StorePackage {
   offerPrice: string;
   imageUrl: string | null;
   isActive: number;
+  items?: {
+    product: StoreProduct;
+    quantity: number;
+  }[];
 }
 
 // A package represented as a cart-compatible product

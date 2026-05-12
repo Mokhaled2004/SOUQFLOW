@@ -11,6 +11,7 @@ import { useCart } from './useCart';
 import { StoreHeader } from './components/StoreHeader';
 import { ProductList } from './components/ProductList';
 import { ProductDetail } from './components/ProductDetail';
+import { PackageDetail } from './components/PackageDetail';
 import { CartView } from './components/CartView';
 import { StoreFooter } from './components/StoreFooter';
 
@@ -25,6 +26,7 @@ export default function StorePage() {
   const { cart, addToCart, removeFromCart, incrementQuantity, decrementQuantity, clearCart, totalItems, totalPrice } = useCart(storeSlug);
 
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<StorePackage | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [showDiscountsOnly, setShowDiscountsOnly] = useState(false);
   const [showPackagesOnly, setShowPackagesOnly] = useState(false);
@@ -32,6 +34,7 @@ export default function StorePage() {
   // Derive view from URL — no local state needed so language changes preserve it
   const rawView = (searchParams.get('view') as View) || 'list';
   const productSlugFromUrl = searchParams.get('product') ?? '';
+  const packageIdFromUrl = searchParams.get('package') ?? '';
 
   // Once products are loaded, restore selectedProduct from URL if needed
   useEffect(() => {
@@ -41,8 +44,16 @@ export default function StorePage() {
     }
   }, [rawView, productSlugFromUrl, products, selectedProduct]);
 
-  // 'detail' is only valid when we have a selected product; fall back to list otherwise
-  const view: View = rawView === 'detail' && !selectedProduct ? 'list' : rawView;
+  // Restore selectedPackage from URL
+  useEffect(() => {
+    if (rawView === 'detail' && packageIdFromUrl && packages.length > 0 && !selectedPackage) {
+      const found = packages.find((p) => p.id.toString() === packageIdFromUrl);
+      if (found) setSelectedPackage(found);
+    }
+  }, [rawView, packageIdFromUrl, packages, selectedPackage]);
+
+  // 'detail' is only valid when we have a selected product or package; fall back to list otherwise
+  const view: View = rawView === 'detail' && !selectedProduct && !selectedPackage ? 'list' : rawView;
 
   // search
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,6 +71,7 @@ export default function StorePage() {
     if (newView === 'list') {
       newParams.delete('view');
       newParams.delete('product');
+      newParams.delete('package');
     } else {
       newParams.set('view', newView);
     }
@@ -92,6 +104,7 @@ export default function StorePage() {
     setShowDiscountsOnly(false);
     updateView('list');
     setSelectedProduct(null);
+    setSelectedPackage(null);
     loadProducts(next);
   };
 
@@ -101,6 +114,7 @@ export default function StorePage() {
     setShowPackagesOnly(false);
     updateView('list');
     setSelectedProduct(null);
+    setSelectedPackage(null);
     loadProducts('');
   };
 
@@ -110,20 +124,34 @@ export default function StorePage() {
     setShowDiscountsOnly(false);
     updateView('list');
     setSelectedProduct(null);
+    setSelectedPackage(null);
     loadProducts('');
   };
 
   const handleProductClick = (p: StoreProduct) => {
     setSelectedProduct(p);
+    setSelectedPackage(null);
     const newParams = new URLSearchParams(searchParams);
     newParams.set('view', 'detail');
     newParams.set('product', p.slug);
+    newParams.delete('package');
+    router.push(`?${newParams.toString()}`, { scroll: false });
+  };
+
+  const handlePackageClick = (pkg: StorePackage) => {
+    setSelectedPackage(pkg);
+    setSelectedProduct(null);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('view', 'detail');
+    newParams.set('package', pkg.id.toString());
+    newParams.delete('product');
     router.push(`?${newParams.toString()}`, { scroll: false });
   };
 
   const handleLogoClick = () => {
     updateView('list');
     setSelectedProduct(null);
+    setSelectedPackage(null);
     setSearchTerm('');
     setSelectedSubcategory('');
     setShowDiscountsOnly(false);
@@ -266,6 +294,17 @@ export default function StorePage() {
               />
             )}
 
+            {view === 'detail' && selectedPackage && (
+              <PackageDetail
+                pkg={selectedPackage}
+                store={store}
+                locale={locale}
+                onBack={() => updateView('list')}
+                onAddToCart={(p) => { addToCart(p); }}
+                onItemClick={handleProductClick}
+              />
+            )}
+
             {(view === 'list' || view === 'history') && (
               <ProductList
                 store={store}
@@ -278,6 +317,7 @@ export default function StorePage() {
                 showDiscountsOnly={showDiscountsOnly}
                 showPackagesOnly={showPackagesOnly}
                 onProductClick={handleProductClick}
+                onPackageClick={handlePackageClick}
                 onAddToCart={(p) => addToCart(p)}
                 onSubcategoryClick={handleSubcategoryClick}
                 onAllClick={handleLogoClick}
