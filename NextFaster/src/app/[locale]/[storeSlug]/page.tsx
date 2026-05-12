@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useLocale } from 'next-intl';
 
-import { View, StoreProduct } from './types';
+import { View, StoreProduct, StorePackage } from './types';
 import { useStoreData } from './useStoreData';
 import { useCart } from './useCart';
 
