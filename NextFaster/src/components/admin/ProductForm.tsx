@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, Upload, AlertCircle, ChevronDown } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { ArrowLeft, Upload, AlertCircle, ChevronDown, X } from 'lucide-react';
 import { Product, CatalogCategory } from '@/types/store';
 
 interface ProductFormProps {
@@ -37,15 +37,14 @@ export default function ProductForm({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [dragActive, setDragActive] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>((product as any)?.imageUrl || (product as any)?.image_url || null);
 
   const isAr = locale === 'ar';
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const uploadFile = async (file: File) => {
     setUploading(true);
+    setError('');
     try {
       const formDataObj = new FormData();
       formDataObj.append('file', file);
@@ -66,6 +65,39 @@ export default function ProductForm({
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadFile(file);
+  };
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true);
+    } else if (e.type === 'dragleave') {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      uploadFile(file);
+    } else {
+      setError(isAr ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file');
+    }
+  }, [isAr]);
+
+  const removeImage = () => {
+    setFormData((prev) => ({ ...prev, imageUrl: '' }));
+    setImagePreview(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,41 +187,70 @@ export default function ProductForm({
           <label className={`block text-sm font-bold text-neutral-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
             {isAr ? 'صورة المنتج' : 'Product Image'}
           </label>
-          <div className="rounded-2xl border-2 border-dashed border-neutral-200 p-8 text-center transition-all hover:border-emerald-300 hover:bg-emerald-50/10">
+          <div 
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`relative group rounded-3xl border-2 border-dashed transition-all duration-300 ${
+              dragActive 
+                ? 'border-emerald-500 bg-emerald-50/50 scale-[1.01]' 
+                : 'border-neutral-200 bg-neutral-50/30 hover:border-emerald-300 hover:bg-emerald-50/10'
+            } p-8 text-center`}
+          >
             {imagePreview ? (
-              <div className="relative h-48 w-full">
+              <div className="relative group mx-auto h-52 w-full max-w-[300px]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="h-full w-full object-contain drop-shadow-sm"
+                  className="h-full w-full object-contain drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                 />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all hover:bg-red-600 hover:scale-110 active:scale-95"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-3">
-                <div className="p-3 bg-neutral-50 rounded-full">
-                  <Upload className="h-8 w-8 text-neutral-400" />
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className={`p-5 rounded-3xl transition-all duration-300 ${dragActive ? 'bg-emerald-500 text-white scale-110 rotate-12 shadow-xl shadow-emerald-500/20' : 'bg-white text-neutral-400 shadow-sm'}`}>
+                  <Upload className={`h-10 w-10 ${dragActive ? 'animate-bounce' : ''}`} />
                 </div>
-                <p className="text-sm font-bold text-neutral-500">
-                  {isAr ? 'اسحب الصورة هنا أو انقر للاختيار' : 'Drag image here or click to select'}
-                </p>
+                <div>
+                  <p className="text-base font-black text-neutral-900">
+                    {isAr ? 'اسحب الصورة هنا' : 'Drag image here'}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-neutral-400 uppercase tracking-widest">
+                    {isAr ? 'أو انقر للاختيار من جهازك' : 'Or click to browse files'}
+                  </p>
+                </div>
               </div>
             )}
+            
             <input
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
+              onChange={handleImageChange}
               disabled={uploading}
-              className="hidden"
+              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
               id="image-upload"
+              title=""
             />
-            <label
-              htmlFor="image-upload"
-              className="mt-4 inline-block cursor-pointer rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50 active:scale-95 shadow-sm shadow-emerald-500/20"
-            >
-              {uploading ? (isAr ? 'جاري الرفع...' : 'Uploading...') : (isAr ? 'اختر صورة' : 'Choose Image')}
-            </label>
+            
+            {!imagePreview && (
+              <div className="mt-6">
+                <span className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-8 py-3 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-600/40 active:scale-95">
+                  {uploading ? (isAr ? 'جاري الرفع...' : 'Uploading...') : (isAr ? 'اختر صورة' : 'Choose Image')}
+                </span>
+              </div>
+            )}
           </div>
+          <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-neutral-400 text-center">
+            {isAr ? 'PNG, JPG, WebP حتى 5 ميجابايت' : 'PNG, JPG, WebP up to 5MB'}
+          </p>
         </div>
 
         {/* Name */}
@@ -202,7 +263,7 @@ export default function ProductForm({
             value={formData.name}
             onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
             placeholder={isAr ? 'مثال: برجر دجاج' : 'e.g. Chicken Burger'}
-            className={`w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all ${isRTL ? 'text-right' : ''}`}
+            className={`w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all ${isRTL ? 'text-right' : ''}`}
           />
         </div>
 
@@ -216,7 +277,7 @@ export default function ProductForm({
             onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
             placeholder={isAr ? 'وصف المنتج...' : 'Product description...'}
             rows={4}
-            className={`w-full resize-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all ${isRTL ? 'text-right' : ''}`}
+            className={`w-full resize-none rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all ${isRTL ? 'text-right' : ''}`}
           />
         </div>
 
@@ -231,7 +292,7 @@ export default function ProductForm({
             value={formData.price}
             onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
             placeholder="0.00"
-            className={`w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all ${isRTL ? 'text-right' : 'text-left'}`}
+            className={`w-full rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-900 placeholder-neutral-400 focus:border-emerald-500 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all ${isRTL ? 'text-right' : 'text-left'}`}
           />
         </div>
 
@@ -250,18 +311,18 @@ export default function ProductForm({
         </div>
 
         {/* Actions */}
-        <div className={`flex flex-col gap-3 pt-6 border-t border-neutral-100 sm:flex-row ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
+        <div className={`flex flex-col gap-4 pt-8 border-t border-neutral-100 sm:flex-row ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
           <button
             type="submit"
             disabled={saving || uploading}
-            className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 font-bold text-white transition-all hover:bg-emerald-700 disabled:opacity-50 active:scale-[0.98] shadow-md shadow-emerald-500/20"
+            className="flex-[2] rounded-2xl bg-neutral-900 px-8 py-5 text-sm font-black uppercase tracking-widest text-white transition-all hover:bg-emerald-600 disabled:opacity-50 active:scale-[0.98] shadow-xl shadow-neutral-900/10"
           >
-            {saving ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ' : 'Save')}
+            {saving ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ المنتج' : 'Save Product')}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 rounded-xl border border-neutral-200 bg-white px-6 py-3 font-bold text-neutral-700 transition-all hover:bg-neutral-50 active:scale-[0.98]"
+            className="flex-1 rounded-2xl border border-neutral-200 bg-white px-8 py-5 text-sm font-black uppercase tracking-widest text-neutral-500 transition-all hover:bg-neutral-50 active:scale-[0.98]"
           >
             {isAr ? 'إلغاء' : 'Cancel'}
           </button>
@@ -293,7 +354,7 @@ function CustomSelect({
       <button
         type="button"
         onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
-        className={`w-full flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-bold text-neutral-700 focus:border-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all hover:bg-neutral-50 ${isRTL ? 'flex-row-reverse' : ''}`}
+        className={`w-full flex items-center justify-between rounded-2xl border border-neutral-200 bg-white px-5 py-4 text-sm font-bold text-neutral-700 focus:border-emerald-500 focus:outline-none focus:ring-8 focus:ring-emerald-500/5 transition-all hover:bg-neutral-50 ${isRTL ? 'flex-row-reverse' : ''}`}
       >
         <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
@@ -302,13 +363,13 @@ function CustomSelect({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 z-50 mt-2 w-full rounded-xl border border-neutral-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] max-h-60 overflow-y-auto py-1.5 animate-in fade-in slide-in-from-top-2">
+          <div className="absolute top-full left-0 z-50 mt-2 w-full rounded-2xl border border-neutral-100 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] max-h-60 overflow-y-auto py-2 animate-in fade-in slide-in-from-top-2">
             {options.map((opt) => (
               <button
                 key={opt.value}
                 type="button"
                 onClick={(e) => { e.preventDefault(); onChange(opt.value); setIsOpen(false); }}
-                className={`w-full block px-4 py-2.5 text-sm font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700 ${value === opt.value ? 'bg-emerald-50 text-emerald-700' : 'text-neutral-700'} ${isRTL ? 'text-right' : 'text-left'}`}
+                className={`w-full block px-5 py-3 text-sm font-bold transition-colors hover:bg-emerald-50 hover:text-emerald-700 ${value === opt.value ? 'bg-emerald-50 text-emerald-700' : 'text-neutral-700'} ${isRTL ? 'text-right' : 'text-left'}`}
               >
                 {opt.label}
               </button>
