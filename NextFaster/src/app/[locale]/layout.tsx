@@ -9,6 +9,9 @@ const locales = ['en', 'ar'];
 export const metadata: Metadata = {
   title: 'SouqFlow - Sell Online for Free',
   description: 'The zero-commission platform for Egyptian sellers',
+  icons: {
+    icon: '/images/favsouq.png',
+  },
 };
 
 export function generateStaticParams() {
