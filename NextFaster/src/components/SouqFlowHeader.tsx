@@ -4,24 +4,28 @@ import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import LanguageToggle from './LanguageToggle';
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { LogOut, User, ShoppingBag, ChevronDown, RefreshCw, Store, Menu, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function SouqFlowHeader() {
   const locale = useLocale();
   const t = useTranslations('landing.nav');
   const tFooter = useTranslations('landing.footer');
   const router = useRouter();
+  const pathname = usePathname();
   const isAr = locale === 'ar';
 
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('');
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
+  // Auth check
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -36,6 +40,37 @@ export default function SouqFlowHeader() {
     };
     checkAuth();
   }, []);
+
+  // Scroll Spy for Landing Page Sections
+  useEffect(() => {
+    if (pathname !== `/${locale}`) {
+      if (pathname.includes('/buyer/dashboard')) setActiveSection('explore');
+      else setActiveSection('');
+      return;
+    }
+
+    const sections = ['features', 'about', 'pricing', 'contact'];
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 100;
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section);
+            return;
+          }
+        }
+      }
+      
+      if (window.scrollY < 100) setActiveSection('');
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial check
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [pathname, locale]);
 
   // Close dropdown/menu when clicking outside
   useEffect(() => {
@@ -68,6 +103,14 @@ export default function SouqFlowHeader() {
     setMobileMenuOpen(false);
   };
 
+  const navLinks = [
+    { id: 'features', label: tFooter('features'), href: `/${locale}#features` },
+    { id: 'about', label: tFooter('about'), href: `/${locale}#about` },
+    { id: 'explore', label: tFooter('explore'), href: `/${locale}/buyer/dashboard` },
+    { id: 'pricing', label: tFooter('pricing'), href: `/${locale}#pricing` },
+    { id: 'contact', label: tFooter('contact'), href: `/${locale}#contact` },
+  ];
+
   return (
     <nav 
       dir={isAr ? 'rtl' : 'ltr'}
@@ -87,21 +130,25 @@ export default function SouqFlowHeader() {
 
           {/* Center Links (Desktop) */}
           <div className="hidden md:flex items-center justify-center gap-8">
-            <Link href={`/${locale}#features`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
-              {tFooter('features')}
-            </Link>
-            <Link href={`/${locale}#about`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
-              {tFooter('about')}
-            </Link>
-            <Link href={`/${locale}/buyer/dashboard`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
-              {tFooter('explore')}
-            </Link>
-            <Link href={`/${locale}#pricing`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
-              {tFooter('pricing')}
-            </Link>
-            <Link href={`/${locale}#contact`} className="text-sm font-bold text-neutral-600 transition-colors hover:text-emerald-600 cursor-pointer">
-              {tFooter('contact')}
-            </Link>
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.id;
+              return (
+                <Link 
+                  key={link.id} 
+                  href={link.href} 
+                  className={`relative text-sm font-bold transition-all duration-300 ${isActive ? 'text-emerald-600' : 'text-neutral-500 hover:text-emerald-600'}`}
+                >
+                  {link.label}
+                  {isActive && (
+                    <motion.div 
+                      layoutId="nav-underline"
+                      className="absolute -bottom-1.5 left-0 right-0 h-0.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
           {/* Desktop right side */}
