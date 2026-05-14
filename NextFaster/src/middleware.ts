@@ -35,6 +35,11 @@ export async function middleware(request: NextRequest) {
 
   // Strip locale prefix to check protected routes
   const pathnameWithoutLocale = pathname.replace(/^\/(en|ar)/, '');
+  
+  if (pathnameWithoutLocale.startsWith('/media/')) {
+    return NextResponse.next();
+  }
+
   const isProtectedRoute = protectedPatterns.some(pattern => pattern.test(pathnameWithoutLocale));
 
   if (isProtectedRoute) {

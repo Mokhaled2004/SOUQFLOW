@@ -26,6 +26,14 @@ const nextConfig = {
   async rewrites() {
     return [
       {
+        source: "/:locale/media/:path*",
+        destination: "/_next/static/media/:path*",
+      },
+      {
+        source: "/media/:path*",
+        destination: "/_next/static/media/:path*",
+      },
+      {
         source: "/insights/vitals.js",
         destination:
           "https://cdn.vercel-insights.com/v1/speed-insights/script.js",
