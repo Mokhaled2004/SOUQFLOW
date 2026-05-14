@@ -236,7 +236,7 @@ export default function StorePage() {
         if (selectedProduct.subcategory_slug && p.subcategory_slug === selectedProduct.subcategory_slug) return true;
         if (selectedProduct.category_slug && p.category_slug === selectedProduct.category_slug) return true;
         return false;
-      })
+      }).slice(0, 5)
     : [];
 
   // Filter products by discount if showDiscountsOnly is true

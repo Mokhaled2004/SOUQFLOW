@@ -24,10 +24,10 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
   const isOutOfStock = product.isOutOfStock === 1;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pt-28 pb-20 font-sans sm:px-6 lg:px-8 animate-in fade-in duration-700">
+    <div className="mx-auto max-w-5xl px-4 pt-28 pb-20 font-sans sm:px-6 lg:px-8 animate-in fade-in duration-700">
 
       {/* ── BACK BUTTON ─────────────────────────────────────────── */}
-      <div className={`mb-8 flex ${isAr ? 'justify-end' : 'justify-start'}`}>
+      <div className={`mb-6 flex ${isAr ? 'justify-end' : 'justify-start'}`}>
         <button
           onClick={onBack}
           className={`group flex items-center gap-2 rounded-2xl border border-neutral-100 bg-white px-5 py-2.5 text-[11px] font-black uppercase tracking-widest text-neutral-500 shadow-sm transition-all hover:border-emerald-200 hover:text-emerald-600 active:scale-95 ${isAr ? 'flex-row-reverse' : ''}`}
@@ -38,7 +38,7 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
       </div>
 
       {/* ── MAIN PRODUCT CARD ───────────────────────────────────── */}
-      <div className={`grid gap-10 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-2xl shadow-emerald-900/5 ring-1 ring-neutral-100 sm:p-10 lg:grid-cols-2 ${isAr ? 'direction-rtl' : ''}`}>
+      <div className={`grid gap-8 overflow-hidden rounded-[2rem] bg-white p-5 shadow-2xl shadow-emerald-900/5 ring-1 ring-neutral-100 sm:p-8 lg:grid-cols-2 ${isAr ? 'direction-rtl' : ''}`}>
 
         {/* Product Image Section */}
         <div className={`relative flex flex-col gap-4 ${isAr ? 'lg:order-2' : ''}`}>
@@ -50,15 +50,15 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
           />
           
           {/* Status Badges */}
-          <div className={`absolute top-6 flex flex-col gap-3 z-10 ${isAr ? 'left-6' : 'right-6'}`}>
+          <div className={`absolute top-5 flex flex-col gap-2 z-10 ${isAr ? 'left-5' : 'right-5'}`}>
              {hasOffer && !isFreeProduct && (
-                <div className="flex items-center gap-2 rounded-full bg-rose-500 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-rose-900/20">
-                  <Tag className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-2 rounded-full bg-rose-500 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-xl shadow-rose-900/20">
+                  <Tag className="h-3 w-3" />
                   {product.offerPercentage}% {isAr ? 'خصم' : 'OFF'}
                 </div>
              )}
              {isOutOfStock && (
-                <div className="rounded-full bg-neutral-900/80 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white backdrop-blur-xl">
+                <div className="rounded-full bg-neutral-900/80 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white backdrop-blur-xl">
                    {isAr ? 'نفذت الكمية' : 'Sold Out'}
                 </div>
              )}
@@ -66,19 +66,19 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
         </div>
 
         {/* Product Info Section */}
-        <div className={`flex flex-col justify-center gap-6 ${isAr ? 'lg:order-1 text-right' : ''}`}>
+        <div className={`flex flex-col justify-center gap-5 ${isAr ? 'lg:order-1 text-right' : ''}`}>
           <div>
-            <div className={`mb-4 flex items-center gap-2 ${isAr ? 'justify-end' : ''}`}>
+            <div className={`mb-3 flex items-center gap-2 ${isAr ? 'justify-end' : ''}`}>
                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600">
                   {isOutOfStock ? (isAr ? 'غير متوفر' : 'Unavailable') : (isAr ? 'متوفر الآن' : 'In Stock Now')}
                </span>
             </div>
-            <h1 className="text-4xl font-black tracking-tight text-neutral-900 sm:text-5xl">{product.name}</h1>
-            <p className="mt-6 text-base font-medium leading-relaxed text-neutral-500">{product.description}</p>
+            <h1 className="text-3xl font-black tracking-tight text-neutral-900 sm:text-4xl">{product.name}</h1>
+            <p className="mt-4 text-sm font-medium leading-relaxed text-neutral-400">{product.description}</p>
           </div>
 
-          <div className="h-px w-full bg-neutral-100 my-2" />
+          <div className="h-px w-full bg-neutral-100 my-1" />
 
           {/* Pricing Area */}
           <div className="space-y-1">
@@ -100,11 +100,11 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
           </div>
 
           {/* Purchase Controls */}
-          <div className={`mt-4 flex flex-col gap-4 sm:flex-row ${isAr ? 'sm:flex-row-reverse' : ''}`}>
+          <div className={`mt-2 flex flex-col gap-4 sm:flex-row ${isAr ? 'sm:flex-row-reverse' : ''}`}>
              <button
               onClick={() => onAddToCart(product)}
               disabled={isOutOfStock}
-              className={`flex flex-1 items-center justify-center gap-3 rounded-2xl px-10 py-5 text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${
+              className={`flex flex-1 items-center justify-center gap-3 rounded-2xl px-8 py-4 text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${
                 isOutOfStock
                   ? 'cursor-not-allowed bg-neutral-100 text-neutral-400 shadow-none'
                   : 'bg-emerald-600 text-white shadow-emerald-900/20 hover:bg-emerald-700 hover:shadow-emerald-900/30'
@@ -113,7 +113,7 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
               <ShoppingCart className="h-5 w-5" />
               {isOutOfStock ? (isAr ? 'نفذت الكمية' : 'Sold Out') : (isAr ? 'إضافة للسلة' : 'Add to cart')}
             </button>
-            <div className="flex items-center justify-center gap-2 px-4 py-2 rounded-2xl bg-neutral-50 border border-neutral-100">
+            <div className="flex items-center justify-center gap-2 px-5 py-2 rounded-2xl bg-neutral-50 border border-neutral-100">
                <span className="text-[10px] font-black uppercase tracking-widest text-neutral-400">
                  {isAr ? 'متجر موثق' : 'Verified Store'}
                </span>
@@ -124,21 +124,21 @@ export function ProductDetail({ product, related, store, locale, onBack, onRelat
 
       {/* ── RELATED PRODUCTS ────────────────────────────────────── */}
       {related.length > 0 && (
-        <div className="mt-24">
-          <div className={`mb-10 flex items-center justify-between border-b border-neutral-100 pb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
-            <h2 className="text-xl font-black uppercase tracking-tight text-neutral-900">
+        <div className="mt-20">
+          <div className={`mb-8 flex items-center justify-between border-b border-neutral-100 pb-4 ${isAr ? 'flex-row-reverse' : ''}`}>
+            <h2 className="text-lg font-black uppercase tracking-tight text-neutral-900">
               {isAr ? 'قد يعجبك أيضاً' : 'You might also like'}
             </h2>
-            <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center">
-               <Plus className="h-4 w-4 text-emerald-600" />
+            <div className="h-7 w-7 rounded-full bg-emerald-50 flex items-center justify-center">
+               <Plus className="h-3.5 w-3.5 text-emerald-600" />
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {related.slice(0, 8).map((p, i) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {related.map((p) => (
               <ProductCard
                 key={p.slug}
                 product={p}
-                loading={i < 4 ? 'eager' : 'lazy'}
+                loading="lazy"
                 locale={locale}
                 onClick={() => onRelatedClick(p)}
                 onAddToCart={(e) => { e.stopPropagation(); onAddToCart(p); }}

@@ -15,6 +15,8 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+import ChatWidget from '@/components/ChatWidget';
+
 export default async function LocaleLayout({
   children,
   params,
@@ -33,6 +35,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
       {children}
+      <ChatWidget />
     </NextIntlClientProvider>
   );
 }
