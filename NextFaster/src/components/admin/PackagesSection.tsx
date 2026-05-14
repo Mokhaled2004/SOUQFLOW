@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, AlertCircle, Save, X, ChevronDown, Search, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, AlertCircle, Save, X, ChevronDown, Search, Upload, Loader2 } from 'lucide-react';
 
 interface Product {
   slug: string;
@@ -55,6 +55,7 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
     realPrice: '',
     offerPrice: '',
     imageUrl: '',
+    images: [] as string[],
     items: [] as PackageItem[],
   });
 
@@ -136,29 +137,46 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files) return;
 
     try {
       setUploadingImage(true);
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
-      formDataUpload.append('imageType', 'package');
-      formDataUpload.append('storeId', initialStoreId.toString());
+      for (const file of Array.from(files)) {
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        formDataUpload.append('imageType', 'package');
+        formDataUpload.append('storeId', initialStoreId.toString());
 
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataUpload,
-      });
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataUpload,
+        });
 
-      if (!res.ok) throw new Error('Upload failed');
-      const data = await res.json();
-      setFormData({ ...formData, imageUrl: data.url });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        setFormData(prev => ({ 
+          ...prev, 
+          imageUrl: prev.imageUrl || data.url,
+          images: [...prev.images, data.url] 
+        }));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploadingImage(false);
     }
+  };
+
+  const removePackageImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        imageUrl: index === 0 ? (newImages[0] || '') : prev.imageUrl,
+        images: newImages
+      };
+    });
   };
 
   const handleSave = async () => {
@@ -441,25 +459,51 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
                 {/* Image Upload */}
                 <div className={`border-t pt-4 ${isRTL ? 'text-right' : ''}`}>
                   <label className="block text-xs font-semibold text-neutral-700 mb-2">
-                    {isAr ? 'صورة الحزمة' : 'Package Image'}
+                    {isAr ? 'صور الحزمة' : 'Package Images'}
                   </label>
-                  <div className={`flex items-center gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
-                    <label className="flex items-center gap-2 px-4 py-2 bg-neutral-100 border border-neutral-300 rounded-lg cursor-pointer hover:bg-neutral-200 transition">
-                      <Upload className="h-4 w-4" />
-                      <span className="text-sm">{isAr ? 'رفع صورة' : 'Upload'}</span>
+                  
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-4">
+                    {formData.images.map((url, index) => (
+                      <div key={index} className="relative group aspect-square rounded-xl overflow-hidden border border-neutral-200 bg-white">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Preview ${index}`}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removePackageImage(index)}
+                          className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all hover:bg-red-600 active:scale-95"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                        {index === 0 && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-emerald-500 text-white text-[8px] font-black uppercase py-1 text-center">
+                            {isAr ? 'الأساسية' : 'Main'}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <label className="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-neutral-200 bg-white transition-all hover:border-emerald-500 hover:bg-emerald-50">
+                      <Plus className="h-5 w-5 text-neutral-400" />
                       <input
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleImageUpload}
                         disabled={uploadingImage}
-                        className="hidden"
+                        className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                       />
                     </label>
-                    {uploadingImage && <span className="text-sm text-neutral-500">{isAr ? 'جاري الرفع...' : 'Uploading...'}</span>}
-                    {formData.imageUrl && (
-                      <span className="text-sm text-green-600">{isAr ? 'تم الرفع' : 'Uploaded'}</span>
-                    )}
                   </div>
+
+                  {uploadingImage && (
+                    <div className="mt-2 flex items-center gap-2 text-emerald-600">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-xs font-bold">{isAr ? 'جاري الرفع...' : 'Uploading...'}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Buttons */}

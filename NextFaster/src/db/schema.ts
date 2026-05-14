@@ -205,6 +205,7 @@ export const products = pgTable(
       .notNull()
       .references(() => stores.id, { onDelete: "cascade" }),
     image_url: text("image_url"),
+    images: text("images").array().default(sql`'{}'::text[]`),
     isActive: integer("is_active").notNull().default(1),
     offerPercentage: integer("offer_percentage").notNull().default(0),
     isOutOfStock: integer("is_out_of_stock").notNull().default(0),
@@ -373,6 +374,7 @@ export const packages = pgTable(
     realPrice: numeric("real_price", { precision: 10, scale: 2 }).notNull(),
     offerPrice: numeric("offer_price", { precision: 10, scale: 2 }).notNull(),
     imageUrl: text("image_url"),
+    images: text("images").array().default(sql`'{}'::text[]`),
     isActive: integer("is_active").notNull().default(1),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

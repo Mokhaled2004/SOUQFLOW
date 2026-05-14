@@ -33,7 +33,12 @@ export async function GET(
     .from(products)
     .where(eq(products.storeId, store.id));
 
-  return NextResponse.json({ products: prods });
+  const safeProds = prods.map(p => ({
+    ...p,
+    images: p.images || []
+  }));
+
+  return NextResponse.json({ products: safeProds });
 }
 
 export async function POST(
@@ -51,7 +56,7 @@ export async function POST(
   if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 404 });
 
   const body = await request.json();
-  const { name, description, price, subcategorySlug, categorySlug, collectionId, imageUrl } = body;
+  const { name, description, price, subcategorySlug, categorySlug, collectionId, imageUrl, images } = body;
 
   if (!name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
   if (!description?.trim()) return NextResponse.json({ error: 'Description is required' }, { status: 400 });
@@ -103,6 +108,7 @@ export async function POST(
       collection_id: finalCollectionId,
       storeId: store.id,
       image_url: imageUrl || null,
+      images: images || [],
       isActive: 1,
     })
     .returning();

@@ -40,7 +40,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, price, subcategorySlug, categorySlug, collectionId, imageUrl } = body;
+    const { name, description, price, subcategorySlug, categorySlug, collectionId, imageUrl, images } = body;
 
     let finalCollectionId = collectionId !== undefined ? (collectionId ? Number(collectionId) : null) : existing[0].collection_id;
     let finalCategorySlug = categorySlug !== undefined ? (categorySlug || null) : existing[0].category_slug;
@@ -88,6 +88,7 @@ export async function PUT(
         category_slug: finalCategorySlug,
         collection_id: finalCollectionId,
         image_url: imageUrl !== undefined ? (imageUrl || null) : existing[0].image_url,
+        images: images !== undefined ? (images || []) : existing[0].images,
       })
       .where(eq(products.slug, productId))
       .returning();

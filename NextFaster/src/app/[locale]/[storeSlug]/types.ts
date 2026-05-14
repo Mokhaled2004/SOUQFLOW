@@ -34,6 +34,7 @@ export interface StoreProduct {
   description: string;
   price: string;
   image_url: string | null;
+  images?: string[];
   subcategory_slug: string | null;
   category_slug?: string | null;
   isActive: number;
@@ -48,6 +49,7 @@ export interface StorePackage {
   realPrice: string;
   offerPrice: string;
   imageUrl: string | null;
+  images?: string[];
   isActive: number;
   items?: {
     product: StoreProduct;

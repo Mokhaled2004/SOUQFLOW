@@ -41,7 +41,19 @@ export async function GET(
       },
     });
 
-    return NextResponse.json({ packages: pkgs });
+    const safePkgs = pkgs.map(pkg => ({
+      ...pkg,
+      images: pkg.images || [],
+      items: pkg.items?.map(item => ({
+        ...item,
+        product: item.product ? {
+          ...item.product,
+          images: (item.product as any).images || []
+        } : null
+      }))
+    }));
+
+    return NextResponse.json({ packages: safePkgs });
   } catch (error) {
     console.error('[packages GET] error:', error);
     return NextResponse.json(
@@ -73,7 +85,7 @@ export async function POST(
 
     const { slug } = await params;
     const body = await request.json();
-    const { name, description, realPrice, offerPrice, imageUrl, items } = body;
+    const { name, description, realPrice, offerPrice, imageUrl, images, items } = body;
 
     // Get store by slug
     const { stores } = await import('@/db/schema');
@@ -100,6 +112,7 @@ export async function POST(
         realPrice: parseFloat(realPrice),
         offerPrice: parseFloat(offerPrice),
         imageUrl,
+        images: images || [],
       })
       .returning();
 

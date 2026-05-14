@@ -52,6 +52,7 @@ export interface Product {
   collection_id?: number | null;
   storeId: number;
   imageUrl: string | null;
+  images: string[];
   isActive: number;
   offerPercentage?: number;
   isOutOfStock?: number;
@@ -65,4 +66,5 @@ export interface ProductFormValues {
   categorySlug?: string | null;
   collectionId?: number | null;
   imageUrl: string;
+  images: string[];
 }

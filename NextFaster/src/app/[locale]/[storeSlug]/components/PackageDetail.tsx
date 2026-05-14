@@ -3,6 +3,7 @@
 import { ArrowLeft, Package, Plus, ShoppingCart, Tag, CheckCircle2 } from 'lucide-react';
 import { StorePackage, StoreInfo, packageToCartProduct } from '../types';
 import { formatPrice } from '@/lib/pricing';
+import ImageGallery from './ImageGallery';
 
 interface Props {
   pkg: StorePackage;
@@ -39,23 +40,15 @@ export function PackageDetail({ pkg, store, locale, onBack, onAddToCart, onItemC
       <div className={`grid gap-10 overflow-hidden rounded-[2.5rem] bg-white p-6 shadow-2xl shadow-emerald-900/5 ring-1 ring-neutral-100 sm:p-10 lg:grid-cols-2 ${isAr ? 'direction-rtl' : ''}`}>
 
         {/* Package Image Section */}
-        <div className={`relative aspect-square overflow-hidden rounded-3xl bg-neutral-50 ${isAr ? 'lg:order-2' : ''}`}>
-          {pkg.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={pkg.imageUrl}
-              alt={pkg.name}
-              className="h-full w-full object-cover transition-transform duration-1000 hover:scale-110"
-              loading="eager"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center">
-              <Package className="h-20 w-20 text-neutral-100" />
-            </div>
-          )}
+        <div className={`relative flex flex-col gap-4 ${isAr ? 'lg:order-2' : ''}`}>
+          <ImageGallery 
+            images={pkg.images && pkg.images.length > 0 ? pkg.images : (pkg.imageUrl ? [pkg.imageUrl] : [])} 
+            name={pkg.name}
+            isAr={isAr}
+          />
           
           {/* Status Badges */}
-          <div className={`absolute top-6 flex flex-col gap-3 ${isAr ? 'left-6' : 'right-6'}`}>
+          <div className={`absolute top-6 flex flex-col gap-3 z-10 ${isAr ? 'left-6' : 'right-6'}`}>
              {hasOffer && (
                 <div className="flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-1.5 text-[11px] font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-900/20">
                   <Tag className="h-3.5 w-3.5" />

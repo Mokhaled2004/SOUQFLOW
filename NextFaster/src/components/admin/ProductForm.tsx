@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { ArrowLeft, Upload, AlertCircle, ChevronDown, X } from 'lucide-react';
+import { ArrowLeft, Upload, AlertCircle, ChevronDown, X, Loader2, Plus } from 'lucide-react';
 import { Product, CatalogCategory } from '@/types/store';
 
 interface ProductFormProps {
@@ -32,13 +32,16 @@ export default function ProductForm({
     subcategorySlug: (product as any)?.subcategory_slug || (product as any)?.subcategorySlug || '',
     categorySlug: (product as any)?.category_slug || (product as any)?.categorySlug || '',
     imageUrl: (product as any)?.imageUrl || (product as any)?.image_url || '',
+    images: (product as any)?.images || [],
   });
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>((product as any)?.imageUrl || (product as any)?.image_url || null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(
+    (product as any)?.images || ((product as any)?.imageUrl || (product as any)?.image_url ? [(product as any)?.imageUrl || (product as any)?.image_url] : [])
+  );
 
   const isAr = locale === 'ar';
 
@@ -58,8 +61,16 @@ export default function ProductForm({
 
       if (!res.ok) throw new Error('Upload failed');
       const { url } = await res.json();
-      setFormData((prev) => ({ ...prev, imageUrl: url }));
-      setImagePreview(url);
+      
+      setFormData((prev) => {
+        const newImages = [...prev.images, url];
+        return { 
+          ...prev, 
+          imageUrl: prev.imageUrl || url, // Use first image as main if none
+          images: newImages 
+        };
+      });
+      setImagePreviews((prev) => [...prev, url]);
     } catch (err) {
       setError(isAr ? 'فشل رفع الصورة' : 'Failed to upload image');
     } finally {
@@ -68,8 +79,10 @@ export default function ProductForm({
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadFile(file);
+    const files = e.target.files;
+    if (files) {
+      Array.from(files).forEach(file => uploadFile(file));
+    }
   };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -87,17 +100,26 @@ export default function ProductForm({
     e.stopPropagation();
     setDragActive(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      uploadFile(file);
-    } else {
-      setError(isAr ? 'يرجى اختيار ملف صورة صالح' : 'Please select a valid image file');
+    const files = e.dataTransfer.files;
+    if (files) {
+      Array.from(files).forEach(file => {
+        if (file.type.startsWith('image/')) {
+          uploadFile(file);
+        }
+      });
     }
   }, [isAr]);
 
-  const removeImage = () => {
-    setFormData((prev) => ({ ...prev, imageUrl: '' }));
-    setImagePreview(null);
+  const removeImage = (index: number) => {
+    setFormData((prev) => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        imageUrl: index === 0 ? (newImages[0] || '') : prev.imageUrl,
+        images: newImages
+      };
+    });
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,7 +207,7 @@ export default function ProductForm({
         {/* Image upload */}
         <div>
           <label className={`block text-sm font-bold text-neutral-700 mb-2 ${isRTL ? 'text-right' : ''}`}>
-            {isAr ? 'صورة المنتج' : 'Product Image'}
+            {isAr ? 'صور المنتج' : 'Product Images'}
           </label>
           <div 
             onDragEnter={handleDrag}
@@ -198,21 +220,41 @@ export default function ProductForm({
                 : 'border-neutral-200 bg-neutral-50/30 hover:border-emerald-300 hover:bg-emerald-50/10'
             } p-8 text-center`}
           >
-            {imagePreview ? (
-              <div className="relative group mx-auto h-52 w-full max-w-[300px]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="h-full w-full object-contain drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all hover:bg-red-600 hover:scale-110 active:scale-95"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+            {imagePreviews.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                {imagePreviews.map((url, index) => (
+                  <div key={index} className="relative group aspect-square rounded-2xl overflow-hidden border border-neutral-200 bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={url}
+                      alt={`Preview ${index}`}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-all hover:bg-red-600 hover:scale-110 active:scale-95"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                    {index === 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-emerald-500 text-white text-[8px] font-black uppercase py-1">
+                        {isAr ? 'الأساسية' : 'Main'}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <label className="relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-200 bg-white transition-all hover:border-emerald-500 hover:bg-emerald-50">
+                  <Plus className="h-6 w-6 text-neutral-400" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    disabled={uploading}
+                    className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                  />
+                </label>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-4 py-4">
@@ -221,35 +263,41 @@ export default function ProductForm({
                 </div>
                 <div>
                   <p className="text-base font-black text-neutral-900">
-                    {isAr ? 'اسحب الصورة هنا' : 'Drag image here'}
+                    {isAr ? 'اسحب الصور هنا' : 'Drag images here'}
                   </p>
                   <p className="mt-1 text-xs font-bold text-neutral-400 uppercase tracking-widest">
                     {isAr ? 'أو انقر للاختيار من جهازك' : 'Or click to browse files'}
                   </p>
                 </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  disabled={uploading}
+                  className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                  id="image-upload"
+                  title=""
+                />
               </div>
             )}
             
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              disabled={uploading}
-              className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-              id="image-upload"
-              title=""
-            />
-            
-            {!imagePreview && (
+            {imagePreviews.length === 0 && !uploading && (
               <div className="mt-6">
                 <span className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-8 py-3 text-sm font-black uppercase tracking-widest text-white shadow-xl shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-emerald-600/40 active:scale-95">
-                  {uploading ? (isAr ? 'جاري الرفع...' : 'Uploading...') : (isAr ? 'اختر صورة' : 'Choose Image')}
+                  {isAr ? 'اختر صور' : 'Choose Images'}
                 </span>
+              </div>
+            )}
+            {uploading && (
+              <div className="mt-6 flex items-center justify-center gap-2 text-emerald-600">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm font-bold">{isAr ? 'جاري الرفع...' : 'Uploading...'}</span>
               </div>
             )}
           </div>
           <p className="mt-3 text-[10px] font-black uppercase tracking-widest text-neutral-400 text-center">
-            {isAr ? 'PNG, JPG, WebP حتى 5 ميجابايت' : 'PNG, JPG, WebP up to 5MB'}
+            {isAr ? 'PNG, JPG, WebP حتى 5 ميجابايت (يمكنك اختيار عدة صور)' : 'PNG, JPG, WebP up to 5MB (multiple selection allowed)'}
           </p>
         </div>
 

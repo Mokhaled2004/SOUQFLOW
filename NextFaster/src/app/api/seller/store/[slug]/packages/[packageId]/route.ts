@@ -34,7 +34,7 @@ export async function PATCH(
 
     const { slug, packageId } = await params;
     const body = await request.json();
-    const { name, description, realPrice, offerPrice, imageUrl, items } = body;
+    const { name, description, realPrice, offerPrice, imageUrl, images, items } = body;
 
     // Get store by slug
     const { stores } = await import('@/db/schema');
@@ -58,6 +58,7 @@ export async function PATCH(
     if (realPrice !== undefined) updateData.realPrice = parseFloat(realPrice);
     if (offerPrice !== undefined) updateData.offerPrice = parseFloat(offerPrice);
     if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+    if (images !== undefined) updateData.images = images;
 
     const [updated] = await db
       .update(packages)
