@@ -49,6 +49,7 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
   const [searchTerm, setSearchTerm] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [packageSearch, setPackageSearch] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -66,6 +67,7 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [packagesRes, productsRes] = await Promise.all([
         fetch(`/api/seller/store/${storeSlug}/packages`),
         fetch(`/api/seller/store/${storeSlug}/products`),
@@ -73,15 +75,32 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
 
       if (packagesRes.ok) {
         const data = await packagesRes.json();
-        setPackages(data.packages || []);
+        setPackages(Array.isArray(data.packages) ? data.packages : []);
+      } else {
+        const errorData = await packagesRes.json().catch(() => ({}));
+        console.error('[PackagesSection] Packages fetch failed:', packagesRes.status, errorData);
+        setPackages([]);
+        if (packagesRes.status !== 401 && packagesRes.status !== 403) {
+          setError(errorData?.error || `Failed to load packages (${packagesRes.status})`);
+        }
       }
 
       if (productsRes.ok) {
         const data = await productsRes.json();
-        setAllProducts(data.products || []);
+        setAllProducts(Array.isArray(data.products) ? data.products : []);
+      } else {
+        const errorData = await productsRes.json().catch(() => ({}));
+        console.error('[PackagesSection] Products fetch failed:', productsRes.status, errorData);
+        setAllProducts([]);
+        if (productsRes.status !== 401 && productsRes.status !== 403) {
+          setError(errorData?.error || `Failed to load products (${productsRes.status})`);
+        }
       }
     } catch (err) {
+      console.error('[PackagesSection] fetchData error:', err);
       setError(err instanceof Error ? err.message : 'Error loading data');
+      setPackages([]);
+      setAllProducts([]);
     } finally {
       setLoading(false);
     }
@@ -202,14 +221,20 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to save package');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData?.error || `HTTP ${res.status}: Failed to save package`);
+      }
 
       setShowForm(false);
       setEditingId(null);
-      setFormData({ name: '', description: '', realPrice: '', offerPrice: '', imageUrl: '', items: [] });
+      setFormData({ name: '', description: '', realPrice: '', offerPrice: '', imageUrl: '', images: [], items: [] });
+      setError(null);
       await fetchData();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error saving package');
+      const errorMsg = err instanceof Error ? err.message : 'Error saving package';
+      console.error('Save error:', errorMsg);
+      setError(errorMsg);
     } finally {
       setSaving(false);
     }
@@ -235,7 +260,13 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
       realPrice: pkg.realPrice,
       offerPrice: pkg.offerPrice,
       imageUrl: pkg.imageUrl || '',
-      items: pkg.items || [],
+      images: (pkg as any).images || [],
+      items: (pkg.items || []).map(item => ({
+        id: item.id,
+        productSlug: item.productSlug,
+        quantity: item.quantity,
+        product: item.product,
+      })),
     });
     setEditingId(pkg.id);
     setShowForm(true);
@@ -246,7 +277,6 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
   );
 
   // Package search filter
-  const [packageSearch, setPackageSearch] = useState('');
   const filteredPackages = packages.filter((pkg) =>
     pkg.name.toLowerCase().includes(packageSearch.toLowerCase()) ||
     (pkg.description ?? '').toLowerCase().includes(packageSearch.toLowerCase()),
@@ -286,7 +316,7 @@ export default function PackagesSection({ storeSlug, storeId: initialStoreId, lo
               e.stopPropagation();
               setShowForm(true);
               setEditingId(null);
-              setFormData({ name: '', description: '', realPrice: '', offerPrice: '', imageUrl: '', items: [] });
+              setFormData({ name: '', description: '', realPrice: '', offerPrice: '', imageUrl: '', images: [], items: [] });
             }}
             className={`flex items-center justify-center gap-1.5 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-emerald-600 active:scale-[0.98] shadow-md shadow-neutral-200 ${isRTL ? 'flex-row-reverse' : ''}`}
           >

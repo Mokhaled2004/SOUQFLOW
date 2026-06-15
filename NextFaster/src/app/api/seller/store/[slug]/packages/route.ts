@@ -44,7 +44,7 @@ export async function GET(
     const safePkgs = pkgs.map(pkg => ({
       ...pkg,
       images: pkg.images || [],
-      items: pkg.items?.map(item => ({
+      items: (pkg.items || []).map(item => ({
         ...item,
         product: item.product ? {
           ...item.product,
@@ -72,6 +72,7 @@ export async function POST(
     const token = cookieStore.get('auth_token')?.value;
 
     if (!token) {
+      console.error('[packages POST] No auth_token in cookies');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -79,13 +80,20 @@ export async function POST(
     try {
       const verified = await jwtVerify(token, JWT_SECRET);
       userId = (verified.payload as JWTPayload).userId;
+      console.log('[packages POST] Token verified. userId:', userId);
     } catch (err) {
+      console.error('[packages POST] Token verification failed:', err);
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
     const { slug } = await params;
     const body = await request.json();
     const { name, description, realPrice, offerPrice, imageUrl, images, items } = body;
+
+    // Validate required fields
+    if (!name?.trim()) {
+      return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+    }
 
     // Get store by slug
     const { stores } = await import('@/db/schema');
@@ -97,9 +105,12 @@ export async function POST(
       return NextResponse.json({ error: 'Store not found' }, { status: 404 });
     }
 
+    console.log('[packages POST] Store found. store.userId:', store.userId, 'userId:', userId);
+
     // Verify user owns the store
     if (store.userId !== userId) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      console.error('[packages POST] Forbidden: user does not own store', { storeUserId: store.userId, userId });
+      return NextResponse.json({ error: 'Forbidden: you do not own this store' }, { status: 403 });
     }
 
     // Create package
@@ -107,11 +118,11 @@ export async function POST(
       .insert(packages)
       .values({
         storeId: store.id,
-        name,
-        description,
+        name: name.trim(),
+        description: description?.trim() || null,
         realPrice: parseFloat(realPrice),
         offerPrice: parseFloat(offerPrice),
-        imageUrl,
+        imageUrl: imageUrl || null,
         images: images || [],
       })
       .returning();
@@ -122,16 +133,17 @@ export async function POST(
         items.map((item: any) => ({
           packageId: pkg.id,
           productSlug: item.productSlug,
-          quantity: item.quantity,
+          quantity: item.quantity || 1,
         })),
       );
     }
 
-    return NextResponse.json({ package: pkg });
+    console.log('[packages POST] Package created successfully:', pkg.id);
+    return NextResponse.json({ package: pkg }, { status: 201 });
   } catch (error) {
     console.error('[packages POST] error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 },
     );
   }
