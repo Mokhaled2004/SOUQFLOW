@@ -92,8 +92,8 @@ export async function POST(
     finalCategorySlug = cat.length > 0 ? cat[0].slug : null;
   }
 
-  // Generate unique slug
-  const baseSlug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  // Generate unique slug — handles Arabic and other non-Latin names
+  const baseSlug = generateSlug(name.trim(), 'product');
   const productSlug = `${baseSlug}-${store.id}-${Date.now()}`;
 
   const [product] = await db
