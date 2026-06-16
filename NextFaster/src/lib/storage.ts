@@ -38,6 +38,13 @@ export async function uploadImage(
     };
   }
 
+  // ─── FAIL LOUDLY on Vercel if token is missing ────────────────────────────
+  if (process.env.VERCEL || process.env.VERCEL_ENV) {
+    throw new Error(
+      'BLOB_READ_WRITE_TOKEN is not set. Please add it to your Vercel environment variables under Storage → Blob.',
+    );
+  }
+
   // ─── LOCAL STORAGE (development fallback) ─────────────────────────────────
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);

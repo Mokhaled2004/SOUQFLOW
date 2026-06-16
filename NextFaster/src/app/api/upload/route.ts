@@ -7,7 +7,17 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'your-secret-key-min-32-chars-long',
 );
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+// Extended list to handle MIME type variations
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/tiff',
+  'image/tif',
+  'image/x-tiff',
+];
 const MAX_SIZE_MB = 5;
 
 export async function POST(request: NextRequest) {
@@ -41,10 +51,20 @@ export async function POST(request: NextRequest) {
 
     if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
 
-    // Validate type
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    // Validate MIME type - be flexible with MIME type detection
+    const mimeType = file.type.toLowerCase();
+    
+    // Check if it's a valid image type
+    const isValidImage = ALLOWED_TYPES.includes(mimeType) || mimeType.startsWith('image/');
+    
+    if (!isValidImage) {
+      console.error('[upload] Invalid file type:', {
+        fileName: file.name,
+        mimeType: file.type,
+        size: file.size,
+      });
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG, WebP, GIF allowed.' },
+        { error: `Invalid file type: ${file.type || 'unknown'}. Only JPEG, PNG, WebP, GIF, TIFF allowed.` },
         { status: 400 },
       );
     }
@@ -62,6 +82,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: result.url }, { status: 200 });
   } catch (error) {
     console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error') },
+      { status: 500 },
+    );
   }
 }

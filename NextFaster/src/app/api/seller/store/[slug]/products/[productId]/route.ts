@@ -19,14 +19,25 @@ export async function PUT(
 ) {
   try {
     const { slug, productId } = await params;
+    console.log('[product/PUT] Starting update for product:', productId);
+    
     const token = request.cookies.get('auth_token')?.value;
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!token) {
+      console.log('[product/PUT] No auth token');
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const payload = await verifyToken(token);
-    if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    if (!payload) {
+      console.log('[product/PUT] Invalid token');
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
 
     const store = await getStoreForUser(slug, payload.userId);
-    if (!store) return NextResponse.json({ error: 'Store not found' }, { status: 404 });
+    if (!store) {
+      console.log('[product/PUT] Store not found:', slug);
+      return NextResponse.json({ error: 'Store not found' }, { status: 404 });
+    }
 
     // Verify product belongs to this store
     const existing = await db
@@ -36,11 +47,34 @@ export async function PUT(
       .limit(1);
 
     if (existing.length === 0) {
+      console.log('[product/PUT] Product not found:', productId);
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
     const body = await request.json();
+    console.log('[product/PUT] Request body:', JSON.stringify(body));
+    
     const { name, description, price, subcategorySlug, categorySlug, collectionId, imageUrl, images } = body;
+
+    // Validate images array
+    let finalImages = images;
+    if (images !== undefined) {
+      if (!Array.isArray(images)) {
+        console.error('[product/PUT] Images is not an array:', typeof images);
+        return NextResponse.json(
+          { error: 'Images must be an array' },
+          { status: 400 },
+        );
+      }
+      // Ensure all items are strings
+      finalImages = images.filter((img: any) => typeof img === 'string');
+      if (finalImages.length !== images.length) {
+        console.warn('[product/PUT] Some images were not strings, filtered:', {
+          original: images.length,
+          filtered: finalImages.length,
+        });
+      }
+    }
 
     let finalCollectionId = collectionId !== undefined ? (collectionId ? Number(collectionId) : null) : existing[0].collection_id;
     let finalCategorySlug = categorySlug !== undefined ? (categorySlug || null) : existing[0].category_slug;
@@ -53,7 +87,10 @@ export async function PUT(
         .from(subcategories)
         .where(and(eq(subcategories.slug, subcategorySlug), eq(subcategories.storeId, store.id)))
         .limit(1);
-      if (sub.length === 0) return NextResponse.json({ error: 'Subcategory not found' }, { status: 400 });
+      if (sub.length === 0) {
+        console.log('[product/PUT] Subcategory not found:', subcategorySlug);
+        return NextResponse.json({ error: 'Subcategory not found' }, { status: 400 });
+      }
       finalSubcategorySlug = subcategorySlug;
       finalCategorySlug = null;
       finalCollectionId = null;
@@ -64,7 +101,10 @@ export async function PUT(
         .from(collections)
         .where(and(eq(collections.slug, categorySlug), eq(collections.storeId, store.id)))
         .limit(1);
-      if (col.length === 0) return NextResponse.json({ error: 'Category (Collection) not found' }, { status: 400 });
+      if (col.length === 0) {
+        console.log('[product/PUT] Collection not found:', categorySlug);
+        return NextResponse.json({ error: 'Category (Collection) not found' }, { status: 400 });
+      }
       
       finalCollectionId = col[0].id;
       finalSubcategorySlug = null;
@@ -78,25 +118,34 @@ export async function PUT(
       finalCategorySlug = cat.length > 0 ? cat[0].slug : null;
     }
 
+    const updateData = {
+      name: name?.trim() ?? existing[0].name,
+      description: description?.trim() ?? existing[0].description,
+      price: price ? String(price) : existing[0].price,
+      subcategory_slug: finalSubcategorySlug,
+      category_slug: finalCategorySlug,
+      collection_id: finalCollectionId,
+      image_url: imageUrl !== undefined ? (imageUrl || null) : existing[0].image_url,
+      images: finalImages !== undefined ? (finalImages || []) : existing[0].images,
+    };
+
+    console.log('[product/PUT] Update data:', updateData);
+
     const [updated] = await db
       .update(products)
-      .set({
-        name: name?.trim() ?? existing[0].name,
-        description: description?.trim() ?? existing[0].description,
-        price: price ? String(price) : existing[0].price,
-        subcategory_slug: finalSubcategorySlug,
-        category_slug: finalCategorySlug,
-        collection_id: finalCollectionId,
-        image_url: imageUrl !== undefined ? (imageUrl || null) : existing[0].image_url,
-        images: images !== undefined ? (images || []) : existing[0].images,
-      })
+      .set(updateData)
       .where(eq(products.slug, productId))
       .returning();
 
+    console.log('[product/PUT] Update successful:', updated.slug);
     return NextResponse.json({ product: updated });
   } catch (error) {
-    console.error('[product/update] PUT error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[product/PUT] error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      { error: `Internal server error: ${errorMessage}` },
+      { status: 500 },
+    );
   }
 }
 

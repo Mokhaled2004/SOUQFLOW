@@ -59,20 +59,26 @@ export default function ProductForm({
         body: formDataObj,
       });
 
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const msg = data?.error || `Upload failed (${res.status})`;
+        throw new Error(msg);
+      }
       const { url } = await res.json();
-      
+
       setFormData((prev) => {
         const newImages = [...prev.images, url];
-        return { 
-          ...prev, 
-          imageUrl: prev.imageUrl || url, // Use first image as main if none
-          images: newImages 
+        return {
+          ...prev,
+          imageUrl: prev.imageUrl || url,
+          images: newImages,
         };
       });
       setImagePreviews((prev) => [...prev, url]);
     } catch (err) {
-      setError(isAr ? 'فشل رفع الصورة' : 'Failed to upload image');
+      const msg = err instanceof Error ? err.message : 'Failed to upload image';
+      console.error('[ProductForm] Upload error:', msg);
+      setError(msg);
     } finally {
       setUploading(false);
     }
